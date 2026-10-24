@@ -1,5 +1,5 @@
 // Service worker: guarda apenas os arquivos do site para uso offline. Não guarda respostas.
-const CACHE = 'alinhamento-2026-v9';
+const CACHE = 'alinhamento-2026-v10';
 const ARQUIVOS = [
   './',
   'index.html',

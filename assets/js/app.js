@@ -142,7 +142,7 @@
       const motivos = [];
       if (conf.maisComum >= REPETICAO_MAXIMA) motivos.push(`${Math.round(conf.maisComum * 100)}% das respostas usaram o mesmo nível`);
       if (conf.rapidas) motivos.push(`${conf.rapidas} resposta(s) foram dadas em menos de 2 segundos`);
-      if (conf.conflitos.length) motivos.push(`${conf.conflitos.length} combinação(ões) contraditória(s) entre afirmações ligadas`);
+      if (conf.conflitos.length) motivos.push(`${conf.conflitos.length} combinação(ões) muito incomum(ns) entre afirmações relacionadas`);
       trocarTela(el('div', {},
         el('div', { class: 'card shadow-sm mb-4 border-danger' }, el('div', { class: 'card-body p-4 p-md-5' },
           el('h2', { class: 'h4' }, 'Não foi possível calcular um resultado confiável'),
@@ -211,7 +211,7 @@
       cartaoConfianca(conf),
       el('div', { class: 'card shadow-sm mb-4' }, el('div', { class: 'card-body p-4' },
         el('h2', { class: 'h5' }, 'Alinhamento por tema'), temas,
-        el('p', { class: 'small text-body-secondary mb-0' }, 'Temas com uma só pergunta tendem a 0% ou 100%. "—" indica que o candidato não tem posição definida no tema ou que você marcou "parcialmente alinhado".'))),
+        el('p', { class: 'small text-body-secondary mb-0' }, 'Em temas com uma só pergunta, o percentual é a proximidade direta entre a sua resposta e a posição do candidato. "—" indica posição neutra no debate ou que você marcou "parcialmente alinhado" em todo o tema.'))),
       el('div', { class: 'card shadow-sm mb-4' }, el('div', { class: 'card-body p-4' },
         el('h2', { class: 'h5 mb-3' }, 'Sua resposta e a posição de cada candidato'), detalhes)),
       cartaoChecagem(ids, S),
@@ -237,7 +237,7 @@
       el('p', { class: 'fs-5 mb-1' }, 'Suas respostas tiveram ', el('strong', { class: `text-${cls}-emphasis` }, `${c.total}% de confiança`), ` (${nivel}).`),
       el('p', { class: 'small text-body-secondary' }, 'Indica o quanto o resultado acima é confiável. Não é um julgamento das suas opiniões.'),
       el('ul', { class: 'list-group mb-3' },
-        item('Coerência', c.coerencia, 'Respostas a afirmações ligadas entre si não se contradizem.'),
+        item('Coerência', c.coerencia, 'Combinações muito incomuns entre afirmações relacionadas.'),
         item('Atenção', c.atencao, 'Tempo suficiente para ler cada afirmação antes de responder.'),
         item('Variedade', c.variedade, 'As respostas não repetem o mesmo nível em quase todas as perguntas.'),
         item('Cobertura', c.cobertura, 'Perguntas respondidas com posição definida (pulos e "parcialmente" contam menos).')
@@ -245,10 +245,10 @@
       c.conflitos.length ? el('div', {},
         el('p', { class: 'small fw-semibold mb-1' }, 'Combinações que reduziram a coerência:'),
         el('ul', { class: 'small mb-2' }, c.conflitos.map(k => el('li', { class: 'mb-1' },
-          `Você ficou "${rot(k.ua)}" com ${curto(k.a)} e "${rot(k.ub)}" com ${curto(k.b)}. Normalmente essas respostas andam juntas no sentido contrário, porque ${k.motivo}.`))),
+          `Você ficou "${rot(k.ua)}" com ${curto(k.a)} e "${rot(k.ub)}" com ${curto(k.b)}. Essa combinação é menos comum: ${k.motivo}. Ela pode refletir uma opinião própria.`))),
         el('p', { class: 'small text-body-secondary mb-0' }, 'Uma combinação incomum não é necessariamente um erro: pode refletir uma opinião própria. Vale reler essas afirmações.')
-      ) : el('p', { class: 'small mb-0' }, 'Nenhuma contradição encontrada entre afirmações ligadas.'),
-      c.coerencia === 0.5 && !c.conflitos.length ? el('p', { class: 'small mb-0' }, 'Não houve respostas definidas suficientes nos pares de afirmações ligadas para avaliar a coerência.') : null,
+      ) : el('p', { class: 'small mb-0' }, 'Nenhuma combinação incomum encontrada.'),
+      null,
       c.rapidas ? el('p', { class: 'small mt-2 mb-0' }, `${c.rapidas} resposta(s) foram dadas em menos de 2 segundos.`) : null,
       el('button', { class: 'btn btn-outline-secondary btn-sm mt-3', onclick: () => irPara(0) }, 'Revisar respostas')
     ));
@@ -293,7 +293,7 @@
       el('h3', { class: 'h5 mt-4' }, 'Confiança das respostas'),
       el('p', {}, 'Ao final, um índice de 0% a 100% mostra o quanto o resultado é confiável. Ele multiplica quatro fatores, de modo que um problema em qualquer um deles reduz o total:'),
       el('ul', {},
-        el('li', {}, el('strong', {}, 'Coerência (fator principal): '), 'quatro pares de afirmações ligadas logicamente, como "pôr a proteção ambiental antes das obras" e "basear a economia da floresta em atividades que a mantêm em pé". Só conta como contradição quando as duas respostas são firmes e em sentidos opostos; quem combina posições moderadas não é penalizado. Os pares foram escolhidos de modo que o discurso de qualquer dos dois candidatos tenha 100% de coerência.'),
+        el('li', {}, el('strong', {}, 'Coerência: '), 'aponta combinações muito incomuns entre afirmações relacionadas, como defender ao mesmo tempo, com toda a força, manter as exigências ambientais nas obras e ampliar mineração e agropecuária na Amazônia. Só conta quando as duas respostas estão no extremo da escala. Combinar posições de lados diferentes é legítimo e não é penalizado.'),
         el('li', {}, el('strong', {}, 'Atenção: '), 'respostas dadas em menos de 2 segundos, tempo curto demais para ler a afirmação.'),
         el('li', {}, el('strong', {}, 'Variedade: '), 'usar sempre o mesmo nível ou só dois níveis reduz a nota; três ou mais níveis equilibrados valem 100%.'),
         el('li', {}, el('strong', {}, 'Cobertura: '), 'proporção de perguntas respondidas (pulos não contam).')
@@ -302,7 +302,7 @@
       el('p', {}, 'Os tempos de resposta ficam só na memória da página e são apagados ao fechá-la.'),
       el('p', {}, 'As afirmações tratam de princípios gerais, como "punir com mais rigor ou atacar as causas do crime". Elas não usam propostas específicas, nomes de programas ou bandeiras de campanha, para que a resposta reflita a sua opinião, e não a identificação com um candidato. A ligação com propostas concretas só aparece no resultado.'),
       el('p', {}, 'O lado da escala não indica ideologia. Algumas afirmações aproximam de um candidato quando você concorda, e outras quando você discorda. As afirmações estão misturadas para evitar esse viés.'),
-      el('p', {}, 'O cálculo foi auditado por agentes independentes e testado em simulações com dezenas de milhares de respostas. Com respostas aleatórias, moderadas ou só nos extremos, e com quem tende a concordar ou a discordar de tudo, a diferença média entre os candidatos ficou abaixo de 0,5 ponto. Quem copia as posições de um candidato recebe 100% para ele, e quem as inverte, 0%, de forma idêntica para os dois.'),
+      el('p', {}, 'O cálculo foi auditado duas vezes por agentes independentes e testado em simulações com dezenas de milhares de respostas. Os pesos das perguntas também equilibram o conjunto de posições dos dois candidatos, para que ninguém fique mais perto do eleitor de meio-termo só por causa da estrutura do questionário. Com respostas aleatórias, moderadas, de meio-termo ou mistas, e com quem tende a concordar ou a discordar de tudo, a diferença média entre os candidatos ficou abaixo de 0,5 ponto. A chance de o resultado ser ocultado por baixa confiança é praticamente a mesma para quem pensa como qualquer um dos dois.'),
       el('h3', { class: 'h5 mt-4' }, 'Regra para definir as posições'),
       el('p', {}, 'A posição de cada candidato vem do que ele disse no debate. Fatos de fora do debate só entram com fonte documental, como votação, orientação de bancada ou ato de governo, e a mesma regra vale para os dois. Quando um candidato não tratou de um tema, a posição dele é neutra.'),
       el('p', { class: 'small text-body-secondary' }, 'Limitações: as posições resumem falas de um único debate e envolvem interpretação. Elas não cobrem todo o programa de governo dos candidatos. O alinhamento não mede competência, histórico nem viabilidade das propostas.'),
@@ -361,7 +361,11 @@
     const temas = {};
     for (const t of new Set(PERGUNTAS.map(q => q.tema))) {
       const qs = PERGUNTAS.filter(q => q.tema === t && estado.respostas[q.id] !== undefined);
-      if (qs.length) temas[t] = Object.fromEntries(cands.map(c => [c, cosseno(qs, c, S)]));
+      if (!qs.length) continue;
+      // Com uma só pergunta, o cosseno só dá 0% ou 100%; nesse caso mostra a proximidade direta.
+      temas[t] = Object.fromEntries(cands.map(c => [c, qs.length === 1
+        ? 100 * (1 - Math.abs(estado.respostas[qs[0].id] - S.p[qs[0].id][c].v) / 4)
+        : cosseno(qs, c, S)]));
     }
     return { total, temas };
   }
@@ -376,14 +380,13 @@
       // Resposta neutra não indica coerência nem contradição.
       if (ua === undefined || ub === undefined || ua === 0 || ub === 0) continue;
       somaPeso += p.peso;
-      // Só conta como contradição quando as duas respostas são firmes e em sentidos opostos.
-      const dist = Math.abs(ua - p.relacao * ub);
-      const sev = Math.max(0, dist - 2) / 2;
+      // Só conta quando as duas respostas estão no extremo da escala e em sentidos contrários ao usual.
+      const sev = Math.abs(ua) === 2 && Math.abs(ub) === 2 && Math.abs(ua - p.relacao * ub) === 4 ? 1 : 0;
       somaSev += p.peso * sev;
       if (sev > 0) conflitos.push({ ...p, ua, ub, sev });
     }
     conflitos.sort((x, y) => y.sev - x.sev);
-    const coerencia = somaPeso ? 1 - somaSev / somaPeso : 0.5;
+    const coerencia = 1 - somaSev / Math.max(somaPeso, 0.75);
 
     const tempos = ids.map(id => estado.tempos[id]).filter(t => t !== undefined);
     const rapidas = tempos.filter(t => t < LEITURA_MINIMA_MS).length;
