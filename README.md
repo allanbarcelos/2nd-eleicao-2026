@@ -1,5 +1,7 @@
 # Alinhamento Eleitoral 2026
 
+**Acesse o site: [allanbarcelos.github.io/2nd-eleicao-2026](https://allanbarcelos.github.io/2nd-eleicao-2026/)**
+
 Questionário que mostra com qual candidato do 2º turno da eleição presidencial de 2026 (Flávio Bolsonaro, PL, e Lula, PT) o eleitor está mais alinhado. O site usa somente as posições apresentadas no debate da TV Globo de 23/10/2026.
 
 **Iniciativa independente e sem viés político.** O projeto não tem vínculo com partidos, candidatos, campanhas ou veículos de imprensa.
