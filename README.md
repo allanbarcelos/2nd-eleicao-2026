@@ -14,7 +14,7 @@ Questionário que mostra com qual candidato do 2º turno da eleição presidenci
 - Cada candidato tem uma posição atribuída em cada afirmação (de −2 a +2), justificada com o trecho do debate e a referência na planilha.
 - O resultado é uma média ponderada da proximidade entre a resposta e a posição de cada candidato. Entram no peso a pergunta (0,6 a 1,2), a intensidade da resposta e os temas que o eleitor marcar como importantes. Detalhes na tela "Metodologia" do site.
 - As afirmações estão misturadas, de modo que concordar ou discordar não favorece sistematicamente nenhum dos dois.
-- No final, um índice mostra a confiança das respostas ("suas respostas tiveram X% de confiança"). Ele combina quatro fatores: coerência entre oito pares de afirmações ligadas logicamente, tempo de leitura, variedade das respostas e quantidade de perguntas respondidas. Os pares foram escolhidos de modo que o discurso de qualquer dos dois candidatos tenha 100% de coerência.
+- No final, um índice mostra a confiança das respostas ("suas respostas tiveram X% de confiança"). Ele combina quatro fatores: coerência entre oito pares de afirmações ligadas logicamente, tempo de leitura, variedade das respostas e quantidade de perguntas respondidas. Os pares foram escolhidos de modo que o discurso de qualquer dos dois candidatos tenha 100% de coerência. Se a confiança ficar abaixo de 35%, ou se o mesmo nível for usado em 80% ou mais das respostas, o resultado não é exibido. Diferenças menores que 5 pontos aparecem como empate técnico, sem destacar nenhum candidato.
 
 ## Privacidade
 

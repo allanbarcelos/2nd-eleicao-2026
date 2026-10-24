@@ -20,8 +20,12 @@
     return segredo;
   }
 
-  const estado = { indice: -1, respostas: {}, importantes: {}, tempos: {}, inicio: 0 };
+  const estado = { indice: -1, respostas: {}, importantes: {}, tempos: {}, inicio: 0, rapidasSeguidas: 0, avisar: false };
   const LEITURA_MINIMA_MS = 2000;
+  const CONFIANCA_MINIMA = 35;       // abaixo disso o resultado não é exibido
+  const REPETICAO_MAXIMA = 0.8;      // mesmo nível em 80% ou mais das respostas
+  const EMPATE_PONTOS = 5;
+  const AVISO_RAPIDAS = 3;           // respostas rápidas seguidas antes do aviso
   const app = document.getElementById('app');
 
   const el = (tag, attrs = {}, ...filhos) => {
@@ -99,6 +103,8 @@
         el('div', { class: 'progress mb-4', role: 'progressbar', 'aria-valuenow': progresso, 'aria-valuemin': 0, 'aria-valuemax': 100 },
           el('div', { class: 'progress-bar', style: `width:${progresso}%` })
         ),
+        estado.avisar ? el('div', { class: 'alert alert-warning py-2 small', role: 'status' },
+          'Leia com calma: o resultado depende da sua atenção. Respostas muito rápidas reduzem a confiança do resultado.') : null,
         el('h2', { class: 'h4 lh-base' }, q.texto),
         opcoes,
         importante,
@@ -114,8 +120,12 @@
     const S = revelar(), CANDIDATOS = S.c;
     const r = calcular();
     const respondidas = Object.keys(estado.respostas).length;
-    const ids = Object.keys(CANDIDATOS).sort((a, b) => r.total[b] - r.total[a] || CANDIDATOS[a].nome.localeCompare(CANDIDATOS[b].nome));
-    const diff = Math.abs(r.total[ids[0]] - r.total[ids[1]]);
+    const porNome = (a, b) => CANDIDATOS[a].nome.localeCompare(CANDIDATOS[b].nome);
+    const [x, y] = Object.keys(CANDIDATOS);
+    const diff = Math.abs(r.total[x] - r.total[y]);
+    const empate = diff < EMPATE_PONTOS;
+    // No empate técnico ninguém aparece na frente: ordem alfabética e cor neutra.
+    const ids = Object.keys(CANDIDATOS).sort(empate ? porNome : (a, b) => r.total[b] - r.total[a] || porNome(a, b));
 
     if (respondidas < MIN_RESPOSTAS) {
       trocarTela(el('div', { class: 'card shadow-sm' }, el('div', { class: 'card-body p-4 p-md-5' },
@@ -129,18 +139,38 @@
     const neutras = Object.values(estado.respostas).filter(v => v === 0).length;
     const conf = avaliarConfianca();
 
+    if (conf.total < CONFIANCA_MINIMA || conf.maisComum >= REPETICAO_MAXIMA) {
+      const motivos = [];
+      if (conf.maisComum >= REPETICAO_MAXIMA) motivos.push(`${Math.round(conf.maisComum * 100)}% das respostas usaram o mesmo nível`);
+      if (conf.rapidas) motivos.push(`${conf.rapidas} resposta(s) foram dadas em menos de 2 segundos`);
+      if (conf.conflitos.length) motivos.push(`${conf.conflitos.length} combinação(ões) contraditória(s) entre afirmações ligadas`);
+      trocarTela(el('div', {},
+        el('div', { class: 'card shadow-sm mb-4 border-danger' }, el('div', { class: 'card-body p-4 p-md-5' },
+          el('h2', { class: 'h4' }, 'Não foi possível calcular um resultado confiável'),
+          el('p', {}, `Suas respostas tiveram ${conf.total}% de confiança. Elas parecem repetidas, rápidas demais ou contraditórias, e um resultado assim não diria nada sobre o que você pensa.`),
+          motivos.length ? el('ul', {}, motivos.map(m => el('li', {}, m))) : null,
+          el('p', { class: 'mb-3' }, 'Leia cada afirmação com calma e responda o que você realmente pensa. Se não tiver opinião sobre algum tema, é melhor pular.'),
+          el('div', { class: 'd-flex flex-wrap gap-2' },
+            el('button', { class: 'btn btn-primary', onclick: () => irPara(0) }, 'Revisar respostas'),
+            el('button', { class: 'btn btn-outline-secondary', onclick: recomecar }, 'Refazer do início'))
+        )),
+        cartaoConfianca(conf)
+      ));
+      return;
+    }
+
     const barras = ids.map(id => el('div', { class: 'mb-3' },
       el('div', { class: 'd-flex justify-content-between' },
         el('strong', {}, `${CANDIDATOS[id].nome} (${CANDIDATOS[id].partido})`),
         el('span', { class: 'fw-semibold' }, `${r.total[id].toFixed(0)}%`)
       ),
       el('div', { class: 'progress', style: 'height:1.25rem' },
-        el('div', { class: 'progress-bar', style: `width:${r.total[id]}%;background:${CANDIDATOS[id].cor}` })
+        el('div', { class: 'progress-bar', style: `width:${r.total[id]}%;background:${empate ? '#6c757d' : CANDIDATOS[id].cor}` })
       )
     ));
 
-    const veredito = diff < 5
-      ? `Empate técnico: a diferença é de ${diff.toFixed(0)} ponto(s). Suas respostas se dividem entre as posições dos dois.`
+    const veredito = empate
+      ? `A diferença é de ${diff.toFixed(1).replace('.', ',')} ponto(s), abaixo da margem de ${EMPATE_PONTOS}. Suas respostas se dividem entre as posições dos dois, sem preferência clara.`
       : `Suas respostas estão mais alinhadas às posições de ${CANDIDATOS[ids[0]].nome}, com ${diff.toFixed(0)} pontos de diferença.`;
 
     const temas = el('table', { class: 'table table-sm align-middle' },
@@ -172,7 +202,7 @@
 
     trocarTela(el('div', {},
       el('div', { class: 'card shadow-sm mb-4' }, el('div', { class: 'card-body p-4 p-md-5' },
-        el('h2', { class: 'h3 mb-4' }, 'Seu resultado'),
+        el('h2', { class: 'h3 mb-4' }, empate ? 'Seu resultado: empate técnico' : 'Seu resultado'),
         barras,
         el('p', { class: 'mt-3' }, veredito),
         el('p', { class: 'small text-body-secondary mb-0' },
@@ -268,6 +298,7 @@
         el('li', {}, el('strong', {}, 'Variedade: '), 'repetir o mesmo nível em mais de 60% das perguntas.'),
         el('li', {}, el('strong', {}, 'Cobertura: '), 'perguntas respondidas; "parcialmente alinhado" vale metade e pulos não contam.')
       ),
+      el('p', {}, `Se a confiança ficar abaixo de ${CONFIANCA_MINIMA}%, ou se o mesmo nível for usado em ${REPETICAO_MAXIMA * 100}% ou mais das respostas, o resultado não é exibido. Se a diferença entre os candidatos for menor que ${EMPATE_PONTOS} pontos, o resultado é apresentado como empate técnico, em ordem alfabética e sem destacar ninguém.`),
       el('p', {}, 'Os tempos de resposta ficam só na memória da página e são apagados ao fechá-la.'),
       el('p', {}, 'As afirmações tratam de princípios gerais, como "punir com mais rigor ou atacar as causas do crime". Elas não usam propostas específicas, nomes de programas ou bandeiras de campanha, para que a resposta reflita a sua opinião, e não a identificação com um candidato. A ligação com propostas concretas só aparece no resultado.'),
       el('p', {}, 'O lado da escala não indica ideologia. Algumas afirmações aproximam de um candidato quando você concorda, e outras quando você discorda. As afirmações estão misturadas para evitar esse viés.'),
@@ -282,7 +313,7 @@
 
   function textoCompartilhar(r, ids, diff, CANDIDATOS) {
     const linhas = ids.map(id => `${CANDIDATOS[id].nome}: ${r.total[id].toFixed(0)}%`).join(' | ');
-    const resumo = diff < 5 ? 'Deu empate técnico.' : `Estou mais alinhado(a) com ${CANDIDATOS[ids[0]].nome}.`;
+    const resumo = diff < EMPATE_PONTOS ? 'Deu empate técnico.' : `Estou mais alinhado(a) com ${CANDIDATOS[ids[0]].nome}.`;
     return `Fiz o teste de Alinhamento Eleitoral 2026 (2º turno), baseado no debate da TV Globo. ${resumo} ${linhas}. Faça o seu: ${urlSite()}`;
   }
 
@@ -362,12 +393,14 @@
 
     const f = x => 0.5 + 0.5 * x;
     const total = Math.round(100 * (0.3 + 0.7 * coerencia) * f(atencao) * f(variedade) * f(cobertura));
-    return { total, coerencia, atencao, variedade, cobertura, conflitos, rapidas };
+    return { total, coerencia, atencao, variedade, cobertura, conflitos, rapidas, maisComum };
   }
 
   function responder(id, valor) {
     estado.respostas[id] = valor;
     estado.tempos[id] = performance.now() - estado.inicio;
+    estado.rapidasSeguidas = estado.tempos[id] < LEITURA_MINIMA_MS ? estado.rapidasSeguidas + 1 : 0;
+    estado.avisar = estado.rapidasSeguidas >= AVISO_RAPIDAS;
     setTimeout(() => irPara(estado.indice + 1), 180);
   }
 
@@ -379,7 +412,7 @@
   }
 
   function recomecar() {
-    estado.respostas = {}; estado.importantes = {}; estado.tempos = {};
+    estado.respostas = {}; estado.importantes = {}; estado.tempos = {}; estado.rapidasSeguidas = 0; estado.avisar = false;
     telaInicio();
   }
 
