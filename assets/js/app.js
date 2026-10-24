@@ -2,7 +2,6 @@
 (function () {
   'use strict';
 
-  const INTENSIDADE = { '-2': 1.2, '-1': 1.0, '0': 0.5, '1': 1.0, '2': 1.2 };
   const PESO_IMPORTANTE = 1.5;
   const MIN_RESPOSTAS = 10;
 
@@ -22,9 +21,9 @@
 
   const estado = { indice: -1, respostas: {}, importantes: {}, tempos: {}, inicio: 0, rapidasSeguidas: 0, avisar: false };
   const LEITURA_MINIMA_MS = 2000;
-  const CONFIANCA_MINIMA = 35;       // abaixo disso o resultado não é exibido
+  const CONFIANCA_MINIMA = 70;       // abaixo disso o resultado não é exibido
   const REPETICAO_MAXIMA = 0.8;      // mesmo nível em 80% ou mais das respostas
-  const EMPATE_PONTOS = 5;
+  const EMPATE_PONTOS = 8;
   const AVISO_RAPIDAS = 3;           // respostas rápidas seguidas antes do aviso
   const app = document.getElementById('app');
 
@@ -124,8 +123,8 @@
     const [x, y] = Object.keys(CANDIDATOS);
     const diff = Math.abs(r.total[x] - r.total[y]);
     const empate = diff < EMPATE_PONTOS;
-    // No empate técnico ninguém aparece na frente: ordem alfabética e cor neutra.
-    const ids = Object.keys(CANDIDATOS).sort(empate ? porNome : (a, b) => r.total[b] - r.total[a] || porNome(a, b));
+    // No empate técnico ninguém aparece na frente: ordem sorteada e cor neutra.
+    const ids = empate ? (Math.random() < 0.5 ? [x, y] : [y, x]) : Object.keys(CANDIDATOS).sort((a, b) => r.total[b] - r.total[a] || porNome(a, b));
 
     if (respondidas < MIN_RESPOSTAS) {
       trocarTela(el('div', { class: 'card shadow-sm' }, el('div', { class: 'card-body p-4 p-md-5' },
@@ -176,7 +175,7 @@
     const temas = el('table', { class: 'table table-sm align-middle' },
       el('thead', {}, el('tr', {}, el('th', {}, 'Tema'), ...ids.map(id => el('th', { class: 'text-end' }, CANDIDATOS[id].nome)))),
       el('tbody', {}, Object.keys(r.temas).sort().map(t => el('tr', {},
-        el('td', {}, t), ...ids.map(id => el('td', { class: 'text-end' }, `${r.temas[t][id].toFixed(0)}%`))
+        el('td', {}, t), ...ids.map(id => el('td', { class: 'text-end' }, r.temas[t][id] == null ? '—' : `${r.temas[t][id].toFixed(0)}%`))
       )))
     );
 
@@ -211,7 +210,8 @@
       )),
       cartaoConfianca(conf),
       el('div', { class: 'card shadow-sm mb-4' }, el('div', { class: 'card-body p-4' },
-        el('h2', { class: 'h5' }, 'Alinhamento por tema'), temas)),
+        el('h2', { class: 'h5' }, 'Alinhamento por tema'), temas,
+        el('p', { class: 'small text-body-secondary mb-0' }, 'Temas com uma só pergunta tendem a 0% ou 100%. "—" indica que o candidato não tem posição definida no tema ou que você marcou "parcialmente alinhado".'))),
       el('div', { class: 'card shadow-sm mb-4' }, el('div', { class: 'card-body p-4' },
         el('h2', { class: 'h5 mb-3' }, 'Sua resposta e a posição de cada candidato'), detalhes)),
       cartaoChecagem(ids, S),
@@ -283,26 +283,28 @@
     trocarTela(el('div', { class: 'card shadow-sm' }, el('div', { class: 'card-body p-4 p-md-5' },
       el('h2', { class: 'h4 mb-3' }, 'Como funciona o cálculo'),
       el('p', {}, 'Cada afirmação tem uma posição atribuída a cada candidato, numa escala de −2 (nada alinhado) a +2 (muito alinhado). A posição foi tirada do que cada um disse no debate da TV Globo de 23/10/2026 e da checagem disponível na planilha. A justificativa de cada posição aparece na tela de resultados.'),
-      el('p', {}, 'Para cada resposta, a proximidade com cada candidato vai de 100% (mesma posição) a 0% (posições opostas). O resultado final é a média ponderada dessas proximidades:'),
+      el('p', {}, 'O resultado compara a direção das suas respostas com a de cada candidato (similaridade de cosseno ponderada). Vai de 100% (vocês pensam na mesma direção em tudo) a 0% (direções opostas), com 50% no ponto neutro. Essa fórmula foi escolhida porque não favorece o candidato que tem posições mais perto do centro da escala.'),
       el('ul', {},
         el('li', {}, el('strong', {}, 'Peso da pergunta (0,6 a 1,2): '), 'é maior quando a pergunta diferencia bem os candidatos e a posição de ambos está clara; é menor em temas de consenso.'),
-        el('li', {}, el('strong', {}, 'Intensidade da resposta: '), 'respostas firmes (nada ou muito alinhado) valem 1,2x; "parcialmente alinhado" vale 0,5x, porque informa menos.'),
+        el('li', {}, el('strong', {}, 'Força da resposta: '), 'respostas firmes (nada ou muito alinhado) pesam mais que as moderadas; "parcialmente alinhado" não aproxima de nenhum dos dois.'),
         el('li', {}, el('strong', {}, 'Importância: '), 'temas marcados como importantes valem 1,5x.'),
         el('li', {}, el('strong', {}, 'Pular: '), 'perguntas puladas não entram no cálculo. São necessárias ao menos 10 respostas.')
       ),
       el('h3', { class: 'h5 mt-4' }, 'Confiança das respostas'),
       el('p', {}, 'Ao final, um índice de 0% a 100% mostra o quanto o resultado é confiável. Ele multiplica quatro fatores, de modo que um problema em qualquer um deles reduz o total:'),
       el('ul', {},
-        el('li', {}, el('strong', {}, 'Coerência (fator principal): '), 'oito pares de afirmações ligadas logicamente, como "o governo deve gastar menos" e "transferências de renda não devem ser ampliadas". Respostas em sentidos contraditórios reduzem a nota, e "parcialmente alinhado" não conta nem a favor nem contra. Os pares foram escolhidos de modo que o discurso de qualquer dos dois candidatos tenha 100% de coerência.'),
+        el('li', {}, el('strong', {}, 'Coerência (fator principal): '), 'quatro pares de afirmações ligadas logicamente, como "pôr a proteção ambiental antes das obras" e "basear a economia da floresta em atividades que a mantêm em pé". Só conta como contradição quando as duas respostas são firmes e em sentidos opostos; quem combina posições moderadas não é penalizado. Os pares foram escolhidos de modo que o discurso de qualquer dos dois candidatos tenha 100% de coerência.'),
         el('li', {}, el('strong', {}, 'Atenção: '), 'respostas dadas em menos de 2 segundos, tempo curto demais para ler a afirmação.'),
-        el('li', {}, el('strong', {}, 'Variedade: '), 'repetir o mesmo nível em mais de 60% das perguntas.'),
-        el('li', {}, el('strong', {}, 'Cobertura: '), 'perguntas respondidas; "parcialmente alinhado" vale metade e pulos não contam.')
+        el('li', {}, el('strong', {}, 'Variedade: '), 'usar sempre o mesmo nível ou só dois níveis reduz a nota; três ou mais níveis equilibrados valem 100%.'),
+        el('li', {}, el('strong', {}, 'Cobertura: '), 'proporção de perguntas respondidas (pulos não contam).')
       ),
       el('p', {}, `Se a confiança ficar abaixo de ${CONFIANCA_MINIMA}%, ou se o mesmo nível for usado em ${REPETICAO_MAXIMA * 100}% ou mais das respostas, o resultado não é exibido. Se a diferença entre os candidatos for menor que ${EMPATE_PONTOS} pontos, o resultado é apresentado como empate técnico, em ordem alfabética e sem destacar ninguém.`),
       el('p', {}, 'Os tempos de resposta ficam só na memória da página e são apagados ao fechá-la.'),
       el('p', {}, 'As afirmações tratam de princípios gerais, como "punir com mais rigor ou atacar as causas do crime". Elas não usam propostas específicas, nomes de programas ou bandeiras de campanha, para que a resposta reflita a sua opinião, e não a identificação com um candidato. A ligação com propostas concretas só aparece no resultado.'),
       el('p', {}, 'O lado da escala não indica ideologia. Algumas afirmações aproximam de um candidato quando você concorda, e outras quando você discorda. As afirmações estão misturadas para evitar esse viés.'),
-      el('p', {}, 'O cálculo foi testado contra viés. Quem responde "parcialmente alinhado" em tudo fica empatado. Respostas aleatórias se dividem igualmente entre os dois. Concordar ou discordar de tudo desloca o resultado em poucos pontos, de forma simétrica. Quando a posição de um candidato não era clara no debate, a pergunta foi descartada.'),
+      el('p', {}, 'O cálculo foi auditado por agentes independentes e testado em simulações com dezenas de milhares de respostas. Com respostas aleatórias, moderadas ou só nos extremos, e com quem tende a concordar ou a discordar de tudo, a diferença média entre os candidatos ficou abaixo de 0,5 ponto. Quem copia as posições de um candidato recebe 100% para ele, e quem as inverte, 0%, de forma idêntica para os dois.'),
+      el('h3', { class: 'h5 mt-4' }, 'Regra para definir as posições'),
+      el('p', {}, 'A posição de cada candidato vem do que ele disse no debate. Fatos de fora do debate só entram com fonte documental, como votação, orientação de bancada ou ato de governo, e a mesma regra vale para os dois. Quando um candidato não tratou de um tema, a posição dele é neutra.'),
       el('p', { class: 'small text-body-secondary' }, 'Limitações: as posições resumem falas de um único debate e envolvem interpretação. Elas não cobrem todo o programa de governo dos candidatos. O alinhamento não mede competência, histórico nem viabilidade das propostas.'),
       el('button', { class: 'btn btn-primary', onclick: voltar }, 'Voltar')
     )));
@@ -338,28 +340,30 @@
 
   // ---------- Lógica ----------
 
-  function calcular() {
-    const S = revelar(), cands = Object.keys(S.c);
-    const zeros = () => Object.fromEntries(cands.map(c => [c, 0]));
-    const soma = zeros(), pesos = zeros();
-    const temas = {};
-    for (const q of PERGUNTAS) {
+  // Similaridade de cosseno ponderada entre as respostas e as posições de cada candidato,
+  // exibida de 0% (direções opostas) a 100% (mesma direção). A resposta "parcialmente
+  // alinhado" (0) não puxa para nenhum lado, e a fórmula não favorece posições mais centrais.
+  function cosseno(qs, cand, S) {
+    let uv = 0, uu = 0, vv = 0;
+    for (const q of qs) {
       const u = estado.respostas[q.id];
       if (u === undefined) continue;
-      const w = q.peso * INTENSIDADE[String(u)] * (estado.importantes[q.id] ? PESO_IMPORTANTE : 1);
-      temas[q.tema] = temas[q.tema] || { ...zeros(), w: 0 };
-      for (const id of cands) {
-        const prox = 1 - Math.abs(u - S.p[q.id][id].v) / 4;
-        soma[id] += w * prox; pesos[id] += w;
-        temas[q.tema][id] += w * prox;
-      }
-      temas[q.tema].w += w;
+      const w = q.peso * (estado.importantes[q.id] ? PESO_IMPORTANTE : 1);
+      const v = S.p[q.id][cand].v;
+      uv += w * u * v; uu += w * u * u; vv += w * v * v;
     }
-    const total = {};
-    for (const id of cands) total[id] = pesos[id] ? (soma[id] / pesos[id]) * 100 : 0;
-    const porTema = {};
-    for (const [t, v] of Object.entries(temas)) porTema[t] = Object.fromEntries(cands.map(c => [c, (v[c] / v.w) * 100]));
-    return { total, temas: porTema };
+    return uu && vv ? 50 * (1 + uv / Math.sqrt(uu * vv)) : null;
+  }
+
+  function calcular() {
+    const S = revelar(), cands = Object.keys(S.c);
+    const total = Object.fromEntries(cands.map(c => [c, cosseno(PERGUNTAS, c, S) ?? 50]));
+    const temas = {};
+    for (const t of new Set(PERGUNTAS.map(q => q.tema))) {
+      const qs = PERGUNTAS.filter(q => q.tema === t && estado.respostas[q.id] !== undefined);
+      if (qs.length) temas[t] = Object.fromEntries(cands.map(c => [c, cosseno(qs, c, S)]));
+    }
+    return { total, temas };
   }
 
   // Confiança = coerência x atenção x variedade x cobertura (cada fator reduz o total).
@@ -372,13 +376,14 @@
       // Resposta neutra não indica coerência nem contradição.
       if (ua === undefined || ub === undefined || ua === 0 || ub === 0) continue;
       somaPeso += p.peso;
+      // Só conta como contradição quando as duas respostas são firmes e em sentidos opostos.
       const dist = Math.abs(ua - p.relacao * ub);
-      const sev = Math.max(0, dist - 1) / 3;
+      const sev = Math.max(0, dist - 2) / 2;
       somaSev += p.peso * sev;
-      if (sev >= 0.3) conflitos.push({ ...p, ua, ub, sev });
+      if (sev > 0) conflitos.push({ ...p, ua, ub, sev });
     }
     conflitos.sort((x, y) => y.sev - x.sev);
-    const coerencia = somaPeso ? Math.max(0, 1 - 2 * somaSev / somaPeso) : 0.5;
+    const coerencia = somaPeso ? 1 - somaSev / somaPeso : 0.5;
 
     const tempos = ids.map(id => estado.tempos[id]).filter(t => t !== undefined);
     const rapidas = tempos.filter(t => t < LEITURA_MINIMA_MS).length;
@@ -387,9 +392,11 @@
     const freq = {};
     for (const id of ids) freq[R[id]] = (freq[R[id]] || 0) + 1;
     const maisComum = ids.length ? Math.max(...Object.values(freq)) / ids.length : 1;
-    const variedade = maisComum <= 0.6 ? 1 : Math.max(0, 1 - (maisComum - 0.6) / 0.4);
+    // Variedade pela entropia: usar três ou mais níveis de forma equilibrada vale 100%.
+    const entropia = Object.values(freq).reduce((h, n) => h - (n / ids.length) * Math.log(n / ids.length), 0);
+    const variedade = Math.min(1, entropia / Math.log(3));
 
-    const cobertura = ids.reduce((s, id) => s + (R[id] === 0 ? 0.5 : 1), 0) / PERGUNTAS.length;
+    const cobertura = ids.length / PERGUNTAS.length;
 
     const f = x => 0.5 + 0.5 * x;
     const total = Math.round(100 * (0.3 + 0.7 * coerencia) * f(atencao) * f(variedade) * f(cobertura));

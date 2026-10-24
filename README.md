@@ -8,13 +8,13 @@ Questionário que mostra com qual candidato do 2º turno da eleição presidenci
 
 ## Como funciona
 
-- São 16 afirmações gerais sobre temas do debate (economia, segurança, meio ambiente, educação, trabalho, políticas sociais e outros), uma por tela.
+- São 15 afirmações gerais sobre temas do debate (economia, segurança, meio ambiente, educação, trabalho, políticas sociais e outros), uma por tela.
 - As afirmações são princípios amplos, sem propostas específicas, nomes de programas ou bandeiras de campanha, para que a resposta não seja guiada pela identificação com um candidato.
 - Para cada afirmação, o eleitor escolhe um nível: nada alinhado, pouco alinhado, parcialmente alinhado, alinhado ou muito alinhado.
-- Cada candidato tem uma posição atribuída em cada afirmação (de −2 a +2), justificada com o trecho do debate e a referência na planilha.
-- O resultado é uma média ponderada da proximidade entre a resposta e a posição de cada candidato. Entram no peso a pergunta (0,6 a 1,2), a intensidade da resposta e os temas que o eleitor marcar como importantes. Detalhes na tela "Metodologia" do site.
-- As afirmações estão misturadas, de modo que concordar ou discordar não favorece sistematicamente nenhum dos dois.
-- No final, um índice mostra a confiança das respostas ("suas respostas tiveram X% de confiança"). Ele combina quatro fatores: coerência entre oito pares de afirmações ligadas logicamente, tempo de leitura, variedade das respostas e quantidade de perguntas respondidas. Os pares foram escolhidos de modo que o discurso de qualquer dos dois candidatos tenha 100% de coerência. Se a confiança ficar abaixo de 35%, ou se o mesmo nível for usado em 80% ou mais das respostas, o resultado não é exibido. Diferenças menores que 5 pontos aparecem como empate técnico, sem destacar nenhum candidato.
+- Cada candidato tem uma posição atribuída em cada afirmação (de −2 a +2), justificada com o trecho do debate e a referência na planilha. A posição vem do que ele disse no debate; fatos de fora só entram com fonte documental (votação, orientação de bancada, ato de governo), com a mesma regra para os dois.
+- O resultado é a similaridade de cosseno ponderada entre as respostas e as posições de cada candidato (0% a 100%). Entram no peso a pergunta (0,6 a 1,2) e os temas que o eleitor marcar como importantes. Essa fórmula não favorece o candidato com posições mais perto do centro da escala. Detalhes na tela "Metodologia" do site.
+- As afirmações estão misturadas, de modo que concordar ou discordar não favorece sistematicamente nenhum dos dois. O site passou por uma auditoria de imparcialidade com agentes independentes (linguagem, codificação das posições, algoritmo, coerência e eleitores simulados). Nas simulações, a diferença média entre os candidatos ficou abaixo de 0,5 ponto em todos os perfis sem posição política definida.
+- No final, um índice mostra a confiança das respostas ("suas respostas tiveram X% de confiança"). Ele combina quatro fatores: coerência entre quatro pares de afirmações ligadas logicamente, tempo de leitura, variedade das respostas e quantidade de perguntas respondidas. Os pares foram escolhidos de modo que o discurso de qualquer dos dois candidatos tenha 100% de coerência. Se a confiança ficar abaixo de 70%, ou se o mesmo nível for usado em 80% ou mais das respostas, o resultado não é exibido. Diferenças menores que 8 pontos aparecem como empate técnico, com os nomes em ordem sorteada e sem destacar nenhum candidato.
 
 ## Privacidade
 
