@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alinhamento Eleitoral 2026</title>
+  <meta name="description" content="Descubra com qual candidato do 2º turno de 2026 você está mais alinhado, com base nas posições apresentadas no debate. Iniciativa independente e sem viés político.">
+  <meta name="theme-color" content="#0d6efd">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <link rel="stylesheet" href="assets/vendor/bootstrap.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-body-tertiary d-flex flex-column min-vh-100">
+  <nav class="navbar bg-body border-bottom">
+    <div class="container">
+      <a class="navbar-brand fw-semibold" href="#" id="linkInicio">Alinhamento Eleitoral 2026</a>
+      <a class="nav-link small" href="#" id="linkMetodologia">Metodologia</a>
+    </div>
+  </nav>
+
+  <main class="container py-4 py-md-5 flex-grow-1">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8">
+        <div id="app" aria-live="polite"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-top bg-body py-4 small text-body-secondary">
+    <div class="container">
+      <p class="mb-2"><strong>Iniciativa independente e sem viés político.</strong> Este site não tem vínculo com partidos, candidatos, campanhas ou veículos de imprensa.</p>
+      <p class="mb-2">Nenhuma resposta é coletada, enviada ou armazenada: o cálculo acontece só no seu navegador.</p>
+      <p class="mb-2">Base: debate da TV Globo de 23/10/2026, checagem de 91 falas e análise de 40 promessas, feitas só com dados oficiais e portais de notícias. Veículos com viés político declarado foram excluídos.</p>
+      <p class="mb-2"><a href="dados/Checagem_Debate_Globo_2026_fontes_filtradas.xlsx" download>Baixar a planilha com todos os dados (Excel)</a></p>
+      <p class="mb-0">Código-fonte: <a href="https://github.com/allanbarcelos/2nd-eleicao-2026" target="_blank" rel="noopener">github.com/allanbarcelos/2nd-eleicao-2026</a></p>
+      <hr>
+      <p class="text-center mb-0">Developed by <a href="https://barcelos.dev" target="_blank" rel="noopener" class="fw-semibold">Barcelos.Dev</a></p>
+    </div>
+  </footer>
+
+  <script src="assets/vendor/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
